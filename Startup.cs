@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Threading;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,6 +14,9 @@ using Microsoft.Extensions.Options;
 using ProjetoVSCApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Swagger;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace ProjetoVSCApi
 {
@@ -33,6 +37,23 @@ namespace ProjetoVSCApi
             services.AddDbContext<ApplicationDbContext>(options => options.UseMySql(Configuration.GetConnectionString("bancoapi")
             , builder => builder.MigrationsAssembly("ProjetoVSCApi")));
 
+            //CHAVE DE SEGURANÇA
+            string Chave = "chave_de_segurança";
+            var ChaveSimetrica = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Chave));
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options => {
+                options.TokenValidationParameters = new TokenValidationParameters{
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateIssuerSigningKey = true,
+                    //DADOS DE VALIDAÇÃO DE UM JWT 
+                    ValidIssuer = "Esveraldo Martins",
+                    ValidAudience ="usuario_comum",
+                    IssuerSigningKey = ChaveSimetrica
+
+                };
+            });
+
             services.AddSwaggerGen(config => {
                 config.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo {Title="API DE PRODUTOS",Version = "v1"});
             });
@@ -51,6 +72,7 @@ namespace ProjetoVSCApi
             }
 
             app.UseHttpsRedirection();
+            app.UseAuthentication(); // Isso que aplica o sistema de autenticação na sua aplicação
             app.UseMvc();
             app.UseSwagger(config => {
                 config.RouteTemplate = "swagger/{documentName}/swagger.json";

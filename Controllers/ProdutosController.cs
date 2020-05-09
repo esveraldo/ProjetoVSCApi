@@ -5,11 +5,13 @@ using ProjetoVSCApi.Models;
 using System.Linq;
 using ProjetoVSCApi.HATEOAS;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ProjetoVSCApi.Controllers
 {
     [Route("api/v1/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class ProdutosController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -22,6 +24,11 @@ namespace ProjetoVSCApi.Controllers
             HATEOAS.AddAction("GET_INFO","GET");
             HATEOAS.AddAction("DELETE_PRODUCT","DELETE");
             HATEOAS.AddAction("EDIT_PRODUCT","PATCH");
+        }
+
+        [HttpGet("teste")]
+        public IActionResult TesteClaims(){
+           return Ok(HttpContext.User.Claims.First(claim => claim.Type.ToString().Equals("id",StringComparison.InvariantCultureIgnoreCase)).Value);
         }
 
         [HttpGet]
